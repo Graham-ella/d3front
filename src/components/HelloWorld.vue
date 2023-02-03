@@ -357,17 +357,6 @@ export default {
   mounted() {
     var _this = this;
     /*
-    findByName(name)
-     */
-    // this.axios.get("person/"+"Jack Nicholson")
-    // .then(function(res) {
-    //   console.log(res.data)
-    // })
-    // .catch(function (err) {
-    //   console.log(err)
-    // })
-
-    /*
     findAllPerson 初始图表
      */
     this.axios.get("person/all")
@@ -386,8 +375,6 @@ export default {
     .catch(function (err) {
       console.log(err)
     })
-
-
 
     // this.initGraph(this.testGraph,{
     //   nodeId: d => d.id,
@@ -412,7 +399,7 @@ export default {
                 nodeStroke = "#fff", // node stroke color
                 nodeStrokeWidth = 1.5, // node stroke width, in pixels
                 nodeStrokeOpacity = 1, // node stroke opacity
-                nodeRadius = 5, // node radius, in pixels
+                nodeRadius = 20, // node radius, in pixels
                 nodeStrength,
                 linkSource = ({source}) => source, // given d in links, returns a node identifier string
                 linkTarget = ({target}) => target, // given d in links, returns a node identifier string
@@ -423,8 +410,8 @@ export default {
                 linkStrength,
                 // colors = d3.schemeTableau10, // an array of color strings, for the node groups
                 colors = d3.schemeCategory10,// -十个分类颜色的数组，表示为 RGB 十六进制字符串。
-                width = 640, // outer width, in pixels
-                height = 400, // outer height, in pixels
+                width = 600, // outer width, in pixels
+                height = 600, // outer height, in pixels
                 //invalidation(失效)
                 // invalidation // when this promise resolves, stop the simulation
               } = {}) {
@@ -474,7 +461,13 @@ export default {
         .attr("viewBox", [-width / 2, -height / 2, width, height])
         .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
-      const link = svg.append("g")
+      svg.call(d3.zoom().on("zoom", function () {
+        g.attr("transform", d3.zoomTransform(this))
+      }))
+
+      const g = svg.append("g")
+
+      const link = g.append("g")
         .attr("stroke", typeof linkStroke !== "function" ? linkStroke : null)
         .attr("stroke-opacity", linkStrokeOpacity)
         .attr("stroke-width", typeof linkStrokeWidth !== "function" ? linkStrokeWidth : null)
@@ -483,7 +476,7 @@ export default {
         .data(links)
         .join("line");
 
-      const node = svg.append("g")
+      const node = g.append("g")
         .attr("fill", nodeFill)
         .attr("stroke", nodeStroke)
         .attr("stroke-opacity", nodeStrokeOpacity)
@@ -492,18 +485,26 @@ export default {
         .data(nodes)
         .join("circle")
         .attr("r", nodeRadius)
-        // .call(drag(simulation)
         .call(drag(simulation));
 
       if (W) link.attr("stroke-width", ({index: i}) => W[i]);
       if (L) link.attr("stroke", ({index: i}) => L[i]);
       if (G) node.attr("fill", ({index: i}) => color(G[i]));
       if (T) node.append("title").text(({index: i}) => T[i]);//鼠标悬浮时，节点显示的信息
-      // node.append('title').text(d => d.id);
-      // if (invalidation != null) invalidation.then(() => simulation.stop());
+
+      const nodeNameText = g.append("g")
+        .selectAll("text")
+        .data(nodes)
+        .join("text")
+        .style("text-anchor", "middle")
+        // .attr("dx", 4)
+        // .attr("dy", 8)
+        .attr("class", "node-name")
+        .text(function (d){
+          return d.id
+        })
 
 
-      //intern(实习生，扣留)
       //传给迭代器函数map的函数，用来筛选值
       function intern(value) {
         return value !== null && typeof value === "object" ? value.valueOf() : value;
@@ -519,6 +520,10 @@ export default {
         node
           .attr("cx", d => d.x)
           .attr("cy", d => d.y);
+
+        nodeNameText
+          .attr("x", d => d.x)
+          .attr("y", d => d.y)
       }
 
       function drag(simulation) {
@@ -554,7 +559,6 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 
 </style>

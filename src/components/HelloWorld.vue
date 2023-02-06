@@ -94,7 +94,9 @@ export default {
           {"id": "Brujon", "group": 4},
           {"id": "Mme.Hucheloup", "group": 8}
         ],
-        "links": []
+        "links": [
+          {"source": "Jack Nicholson", "target": "Emil Eifrem", "value": 5}
+        ]
         // "links": [
         //   {"source": "Napoleon", "target": "Myriel", "value": 1},
         //   {"source": "Mlle.Baptistine", "target": "Myriel", "value": 8},
@@ -355,27 +357,7 @@ export default {
   }
   },
   mounted() {
-    var _this = this;
-    /*
-    findAllPerson 初始图表
-     */
-    this.axios.get("person/all")
-    .then(function(res) {
-      _this.testGraph["nodes"] = res.data
-      _this.initGraph(_this.testGraph,{
-        nodeId: d => d.id,
-        nodeGroup: d => d.group,
-        nodeTitle: d => `${d.id}\n${d.group}`,
-        linkStrokeWidth: l => Math.sqrt(l.value),
-        width :800,
-        height: 800,
-      })
-      console.log(res)
-    })
-    .catch(function (err) {
-      console.log(err)
-    })
-
+    this.getGraphData()
     // this.initGraph(this.testGraph,{
     //   nodeId: d => d.id,
     //   nodeGroup: d => d.group,
@@ -387,6 +369,29 @@ export default {
     // })
   },
   methods: {
+    getGraphData(){
+      var _this = this;
+      /*
+      findAllPerson 初始图表
+       */
+      this.axios.get("person/all")
+        .then(function(res) {
+          _this.testGraph["nodes"] = res.data
+          _this.initGraph(_this.testGraph,{
+            nodeId: d => d.id,
+            nodeGroup: d => d.group,
+            nodeTitle: d => `${d.id}\n${d.group}`,
+            linkStrokeWidth: l => Math.sqrt(l.value),
+            width :800,
+            height: 800,
+          })
+          console.log(res)
+        })
+        .catch(function (err) {
+          console.log(err)
+        })
+    },
+
     initGraph({
                 nodes, // an iterable of node objects (typically [{id}, …])
                 links // an iterable of link objects (typically [{source, target}, …])
@@ -476,15 +481,18 @@ export default {
         .data(links)
         .join("line");
 
-      const node = g.append("g")
+      const node = g.append("g")  // g里面放g元素
         .attr("fill", nodeFill)
         .attr("stroke", nodeStroke)
         .attr("stroke-opacity", nodeStrokeOpacity)
         .attr("stroke-width", nodeStrokeWidth)
-        .selectAll("circle")
-        .data(nodes)
-        .join("circle")
-        .attr("r", nodeRadius)
+        .attr("class","nodes")
+        .selectAll("circle") // 找出所有的circle
+        .data(nodes) // data绑定
+        .join("circle") // circle元素
+        .attr("r", nodeRadius) // 半径
+        .on("mouseover", mouseover)
+        .on("mouseout", mouseout)
         .call(drag(simulation));
 
       if (W) link.attr("stroke-width", ({index: i}) => W[i]);
@@ -496,14 +504,13 @@ export default {
         .selectAll("text")
         .data(nodes)
         .join("text")
-        .style("text-anchor", "middle")
         // .attr("dx", 4)
-        // .attr("dy", 8)
-        .attr("class", "node-name")
+        .attr("dy", 40)
+        .attr("class", "nodeName")
         .text(function (d){
           return d.id
         })
-
+        .style("text-anchor", "middle")
 
       //传给迭代器函数map的函数，用来筛选值
       function intern(value) {
@@ -544,11 +551,25 @@ export default {
           event.subject.fx = null;
           event.subject.fy = null;
         }
+
         //绑定返回
         return d3.drag()
           .on("start", dragstarted)
           .on("drag", dragged)
           .on("end", dragended);
+      }
+
+      function mouseover() {
+        // d3.select(this).select("circle").transition()
+        //   // .duration(750)
+        //   .attr("r", 16);
+        // this.node.attr("r", 16)
+      }
+
+      function mouseout() {
+        // d3.select(this).select("circle").transition()
+        //   // .duration(750)
+        //   .attr("r", 8);
       }
 
       //Object.assign()合并两个对象
@@ -560,5 +581,34 @@ export default {
 </script>
 
 <style scoped>
+
+.container{
+  width: 800px;
+  height: 800px;
+  border: 1px solid #2c3e50;
+  border-radius: 8px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #154360 repeating-linear-gradient(30deg,
+  hsla(0, 0%, 100%, .1), hsla(0, 0%, 100%, .1) 15px,
+  transparent 0, transparent 30px);
+}
+
+/*.nodes circle {*/
+/*  stroke: #000;*/
+/*  stroke-width:3px;*/
+/*  cursor: pointer;*/
+/*}*/
+
+
+/*.node:hover{*/
+/*  stroke-width: 5px;*/
+/*}*/
+
+.nodeName{
+  fill:white;
+}
+
+
 
 </style>
